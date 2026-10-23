@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSC 805 - Regional View</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <style>
+    :root {
+      --ink: #111111;
+      --paper: #ffffff;
+      --bg: #f4f4f2;
+      --muted: #6b6b6b;
+      --ghost: #ececea;
+      --hair: #d6d6d2;
+      --shadow: 4px 4px 0 #111111;
+    }
+    * { box-sizing: border-box; }
+    html, body { background: var(--bg); }
+    body {
+      margin: 0; padding: 26px;
+      color: var(--ink);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+    }
+    .frame {
+      max-width: 1080px; margin: 0 auto;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      box-shadow: 8px 8px 0 var(--ink);
+      padding: 24px 26px 28px;
+    }
+    h1 {
+      font-size: 21px; font-weight: 700; margin: 0 0 6px;
+      text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.15;
+    }
+    .sub { color: var(--muted); font-size: 12.5px; margin: 0 0 20px; max-width: 78ch; line-height: 1.5; }
+    .hr { border: 0; border-top: 1px solid var(--hair); margin: 18px 0 22px; }
+
+    /* boxed section label, as in the prototype */
+    .blabel {
+      display: inline-block; border: 1px solid var(--ink); background: var(--paper);
+      padding: 2px 8px 3px; margin-bottom: 10px;
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    }
+    .stack { margin-bottom: 26px; }
+
+    /* controls */
+    .controls {
+      display: grid; grid-template-columns: 260px 1fr 150px;
+      gap: 22px; align-items: end; margin-bottom: 26px;
+    }
+    .field label, .fld-label {
+      display: block; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+      font-weight: 700; color: var(--ink); margin-bottom: 7px;
+    }
+    .field-row { display: flex; gap: 8px; }
+    input[type="text"] {
+      flex: 1 1 auto; min-width: 0; padding: 8px 9px; font-size: 13px;
+      color: var(--ink); background: var(--paper);
+      border: 1px solid var(--ink); border-radius: 0;
+      box-shadow: 2px 2px 0 var(--ink);
+      font-family: inherit;
+    }
+    input[type="text"]:focus { outline: 2px solid var(--ink); outline-offset: 3px; }
+    .plus {
+      flex: 0 0 34px; height: 34px; line-height: 1; font-size: 17px;
+      background: var(--paper); border: 1px solid var(--ink); border-radius: 0;
+      box-shadow: 2px 2px 0 var(--ink); cursor: pointer; color: var(--ink);
+    }
+    .plus:active { transform: translate(2px, 2px); box-shadow: none; }
+
+    .year-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+    .year-read {
+      background: var(--ink); color: var(--paper);
+      font-size: 12px; font-weight: 700; padding: 2px 8px 3px; letter-spacing: 0.06em;
+    }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 22px; background: transparent; cursor: pointer; margin: 0;
+    }
+    input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--ink); }
+    input[type="range"]::-moz-range-track { height: 2px; background: var(--ink); }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 14px; height: 14px; margin-top: -6px;
+      background: var(--paper); border: 2px solid var(--ink);
+      box-shadow: 2px 2px 0 var(--ink); border-radius: 0;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 12px; height: 12px; background: var(--paper);
+      border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); border-radius: 0;
+    }
+    input[type="range"]:focus { outline: 2px solid var(--ink); outline-offset: 4px; }
+
+    .sex { display: flex; gap: 6px; }
+    .sex button {
+      flex: 1 1 auto; padding: 8px 6px;
+      background: var(--paper); color: var(--ink);
+      border: 1px solid var(--ink); border-radius: 0; box-shadow: 2px 2px 0 var(--ink);
+      font-family: inherit; font-size: 9.5px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+    }
+    .sex button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+    .sex button:active { transform: translate(2px, 2px); box-shadow: none; }
+
+    /* panels */
+    section.panel {
+      border: 2px solid var(--ink); background: var(--paper);
+      box-shadow: var(--shadow); padding: 16px 18px 18px; margin-bottom: 28px;
+    }
+    svg { display: block; width: 100%; height: auto; }
+    svg text { font-family: inherit; }
+
+    /* cards */
+    .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+    .card {
+      background: var(--paper); border: 2px solid var(--ink);
+      box-shadow: 4px 4px 0 var(--ink); padding: 11px 12px 12px; position: relative;
+    }
+    .card.lead { border-width: 2px; box-shadow: 6px 6px 0 var(--ink); }
+    .card .rname {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
+    }
+    .card .swatch { width: 12px; height: 12px; border: 1px solid var(--ink); flex: 0 0 auto; }
+    .card .rate {
+      font-size: 25px; font-weight: 700; letter-spacing: -0.02em; margin: 9px 0 0; line-height: 1;
+    }
+    .card .rate small {
+      display: block; font-size: 8.5px; font-weight: 700; letter-spacing: 0.13em;
+      color: var(--muted); margin-top: 5px; text-transform: uppercase;
+    }
+    .card .meta { font-size: 11.5px; color: var(--muted); margin-top: 8px; line-height: 1.45; }
+    .card .index {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      margin-top: 7px;
+    }
+    .card .tag {
+      position: absolute; top: -1px; right: -1px;
+      background: var(--ink); color: var(--paper);
+      font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
+      padding: 3px 6px 4px; text-transform: uppercase;
+    }
+    .card .bar { height: 5px; border: 1px solid var(--ink); margin-top: 10px; background: var(--paper); }
+    .card .bar > i { display: block; height: 100%; background: var(--ink); }
+
+    #note { font-size: 12px; color: var(--muted); min-height: 17px; margin-top: 12px; }
+
+    /* loading */
+    #loading {
+      position: fixed; inset: 0; background: var(--bg); z-index: 20;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; color: var(--ink);
+    }
+    #loading .bar { width: 260px; height: 8px; border: 2px solid var(--ink); background: var(--paper); }
+    #loading .bar > i { display: block; height: 100%; width: 0%; background: var(--ink); transition: width .15s linear; }
+    #loadmsg { color: var(--muted); letter-spacing: 0.06em; }
+
+    .axis line, .axis path { stroke: var(--ink); }
+    .axis text { fill: var(--muted); font-size: 10px; }
+    .gridline { stroke: var(--hair); stroke-dasharray: 2 3; }
+
+    @media (max-width: 880px) {
+      .controls { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading"><div>Loading baby_names.json (87 MB)</div><div class="bar"><i></i></div><div id="loadmsg"></div></div>
+
+  <div class="frame">
+    <h1>Regional Shifts of Baby Names (1910&ndash;2025)</h1>
+    <p class="sub">Each of the 51 Census areas (50 states + DC) belongs to exactly one official Census region. 
+       Four regions pull on one rope; a region's pull is the rate at which babies there received the name, 
+       normalised by how many babies the region had at all. The knot settles at the balance point.</p>
+
+    <div class="controls">
+      <div class="field">
+        <label for="nameInput">Name</label>
+        <div class="field-row">
+          <input id="nameInput" type="text" list="nameList" value="Mary" autocomplete="off" spellcheck="false" />
+          <button class="plus" type="button" aria-label="Pick a name" id="pickName">+</button>
+        </div>
+        <datalist id="nameList"></datalist>
+      </div>
+      <div class="field">
+        <label for="yearSlider">Year</label>
+        <div class="year-row"><span class="year-read" id="yearRead">1991</span></div>
+        <input id="yearSlider" type="range" min="1910" max="2025" step="1" value="1991" />
+      </div>
+      <div class="field">
+        <span class="fld-label">Sex</span>
+        <div class="sex" role="group" aria-label="Sex">
+          <button type="button" data-sex="F" aria-pressed="true">Female</button>
+          <button type="button" data-sex="M" aria-pressed="false">Male</button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="hr" />
+
+    <div class="stack">
+      <span class="blabel">The Tug of War</span>
+      <section class="panel">
+        <svg id="rope" viewBox="0 0 900 200" role="img" aria-labelledby="ropeTitle"></svg>
+        <div id="note"></div>
+      </section>
+      <div class="cards" id="cards"></div>
+    </div>
+
+    <div class="stack">
+      <span class="blabel">Regional Share over Time</span>
+      <section class="panel">
+        <svg id="trend" viewBox="0 0 900 270" role="img" aria-labelledby="trendTitle"></svg>
+      </section>
+    </div>
+  </div>
+
+  <script type="module" src="regional.js"></script>
+</body>
+</html>

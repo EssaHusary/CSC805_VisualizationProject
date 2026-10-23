@@ -1,0 +1,10 @@
+{
+  "name": "csc805-visualization-project",
+  "private": true,
+  "type": "module",
+  "description": "Interactive graph visualizer for SSA baby names (CSC 805)",
+  "scripts": {
+    "serve": "python3 -m http.server 8000 --directory ..",
+    "verify": "node scripts/verify-data.mjs"
+  }
+}
