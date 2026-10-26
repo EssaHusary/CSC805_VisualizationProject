@@ -1,7 +1,14 @@
-let babyDataIndex = {};  // Stores the soon-to-be baby names JSON file as a global (this is for testing purposes).
+export let babyDataIndex = loadData();  /* Global variable that holds the baby names JSON data. See the loadData() function
+                                           below. Uzair and Citlally, in case you didn't know, I can call it before declaration 
+                                           because of JavaScript hoisting! */ 
+
+//console.log("Global variable babyDataIndex:", babyDataIndex);  // This will print a Promise object because loadData is async.
+
+
 
 // This function gets the state-level baby_names.json file, effectively loading it into memory.
 async function loadData() {
+    let babyDataIndex = {};  // Stores the soon-to-be baby names JSON file as a global (this is for testing purposes).
     const response = await fetch('baby_names.json');   // Fetches the state-level baby name JSON data from the folder
     babyDataIndex = await response.json();             // Waits for the object and stores it in babyDataIndex
     console.log("Data loaded and ready for instant lookups!");
@@ -11,7 +18,7 @@ async function loadData() {
 // This function essentially prints out test values to make sure that the loading process worked.
 async function printData() {
     // I 'await' the loadData call so JavaScript pauses until the process of fetching and storing is complete.
-    await loadData();
+    let babyDataIndex = await loadData();
     
     // Now babyDataIndex holds my JSON object. Here are some values we can print.
     console.log("Full object:", babyDataIndex);
@@ -20,6 +27,7 @@ async function printData() {
     console.log("Cali Female 2020 Data:", babyDataIndex["CA"]["F"]["2020"]);
     console.log("Top-level keys:", Object.keys(babyDataIndex));
 }
+
 
 /* The following code was, WITH PERMISSION FROM PROFESSOR HUMAYOUN, taken from Nina's D3 map drawing tutorials.
    I made a couple of modifications to ensure that we standardize on d3 version 7, which includes having

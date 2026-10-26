@@ -15,8 +15,44 @@
             <div id="usa_map"></div>
         </div>
     </div>
-    <script src="map.js"></script>
 
+    <!-- This is a form that will allow the user to submit the name they want to analyze. It has a 'text' field and a 'button'
+     field. Pressing 'enter' on their keyboard or clicking the 'button' will trigger an action in my map visualization 
+     (assuming gender is also selected). -->
+    <form>  
+        <input id="nameInput" type="text" placeholder="Enter Name">
+        <button id="submitButton" type="submit">+</button>
+    </form>
+    
+    <!-- This is a time slider. I set the minimum value ('min') to 1910 and the 'max' to 2025, to correspond user actions with 
+     our data set. The default starting value ('value') is 1910, as the user will start here. The 'output' element outputs what
+     year is currently being displayed. This is acheived by setting the 'oninput' property of the 'timeSlider' to the current 
+     value of the 'timeSlider':
+     
+     document.getElementById('output').value = this.value
+
+     The default 'output' is 1910, as that's where we begin. 
+     
+     The user can now freely slide this slider from 1910 to 2025. -->
+    <input type="range" id="timeSlider" min="1910" max="2025" value="1910"
+        oninput="document.getElementById('output').value = this.value">
+    <output id="output" for="timeSlider">1910</output>
+
+    <!-- These two inputs are 'checkboxes', one for the user to select "male", and one for the user to select "female". Their
+     default values are "unchecked", as we want the users to be forced to choose an initial gender (associated with a name) 
+     to analyze. There are also labels for obvious reasons. -->
+    <input type="checkbox" id="maleCheckbox" unchecked>
+    <label for="maleCheckbox">Male</label>
+    <input type="checkbox" id="femaleCheckbox" unchecked>
+    <label for="femaleCheckbox">Female</label>
+
+    <!-- <script src="map.js"></script> -->
+    <!-- <script src="mapInteractions.js"></script> -->
+
+    <!-- This is an ES module to allow importing and exporting globals, such as the baby_names.json data. Since 
+     mapInteractions.js imports the global JSON data from map.js, we have mapInteractions.js as the 'src'. We import both
+     files by having just this one script. -->
+    <script type="module" src="mapInteractions.js"></script>
 </body>
 
 </html>
