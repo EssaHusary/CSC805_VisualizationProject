@@ -2,8 +2,6 @@ export let babyDataIndex = loadData();  /* Global variable that holds the baby n
                                            below. Uzair and Citlally, in case you didn't know, I can call it before declaration 
                                            because of JavaScript hoisting! */ 
 
-//console.log("Global variable babyDataIndex:", babyDataIndex);  // This will print a Promise object because loadData is async.
-
 
 
 // This function gets the state-level baby_names.json file, effectively loading it into memory.
@@ -51,7 +49,7 @@ var svg = d3.select('#usa_map')
     .attr('width', width)
     .attr('height', height);
 
-var g = svg.append('g');  // This is a collection or grouping of SVG ('path') elements.
+export let g = svg.append('g');  // This is a collection or grouping of SVG ('path') elements. I will export it to use for map functionality.
 
 var albersUSAProjection = d3.geoAlbersUsa();   // This is the projection function which projects actual coordinates to pixel mappings on the screen.
 
@@ -81,19 +79,20 @@ d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(function
         .data(topojson.feature(topologyStateBoundaries, topologyStateBoundaries.objects.states).features) 
         .enter()                        // Creates placeholders for each state 'path'  
         .append('path')                 // Specifies that each placeholder will be an SVG 'path' object
-        .attr('fill', '#d4d4d4')      // Styling for the state color
+        .attr('fill', 'white')      // Styling for the state color
         .attr('stroke', '#000000')    // Styling for the state borders
         .attr('d', geoPath)             // Begins the drawing of the map
-        .attr('fill-opacity', 1)
+        .attr('fill-opacity', 0)
         .on("mouseover", function (event, d) {                 // Darkens a state when mouse hovers over it
-            d3.select(this).style("fill", "black");
+            // d3.select(this).style("fill", "black");
         })
         .on("mouseout", function (event, d) {                  // The state returns to its former color when the mouse cursor is off of it 
-            d3.select(this).style("fill", "#d4d4d4");
+            // d3.select(this).style("fill", "#d4d4d4");
         })
         .on("click", async function (event, d) {               // This turns the state red AND triggers printData test. This
-            d3.select(this).style("fill", "red");              // is purely for testing purposes.
-            await printData();
+            // d3.select(this).style("fill", "red");              // is purely for testing purposes.
+            // await printData();
+            console.log(d.id)
         });
 
 }).catch(function(error) {
