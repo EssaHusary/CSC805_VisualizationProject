@@ -25,6 +25,7 @@
             echo ""
             echo "  serve   python3 -m http.server 8000 --directory .."
             echo "          then open http://localhost:8000/RegionalView/regional.html"
+            echo "                    http://localhost:8000/GraphView/graph.html"
           '';
         };
       });

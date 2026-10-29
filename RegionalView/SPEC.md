@@ -103,7 +103,7 @@ Implication: parse **once per page load**, never per interaction. See §9.
     MapView/        map.html, map.js, usa_json.js, usa_json_mod.js, baby_names.json
     GenderView/     gender.html, gender.js
     RegionalView/   regional.html, regional.js, regions.js, README.md, SPEC.md
-    GraphView/      graph.html, graph.js
+    GraphView/      graph.html, graph.js, graphData.js, README.md
     scripts/        verify-data.mjs
     flake.nix       dev shell
 
@@ -242,6 +242,26 @@ Bar chart of state-level frequency for the selected name.
 - Bars are 1 px black on white with a gray fill; the selected state (from MapView) is
   inverted (black fill).
 - Must handle a name with zero occurrences in most states without collapsing the axis.
+
+#### As built (2026-10-29)
+
+- **Sort order resolved:** alphabetical by full state name (matches the frame's reading order),
+  with a user toggle to re-sort by bar height. Ties break alphabetically.
+- **X labels** are rotated 90 degrees and show full state names, not postal codes — 51
+  two-letter codes at one per band are indistinguishable at this width.
+- **Measure toggle:** births, or births per 100,000 births of that sex in that state. The rate
+  view answers the California-is-not-Wyoming objection that §7.3 already makes for regions;
+  the axis label and the headline fact card both follow the active measure.
+- **Selected state** arrives as the `state` query parameter (postal code or full name), is
+  drawn solid black with its code tagged above the bar, and can also be set by clicking a bar
+  here. It is emitted back on `viz:selection`.
+- **Zeros** keep their slot on the axis with a hairline at the baseline, so absence reads as
+  "none recorded" rather than a missing bar. An all-zero name draws an explicit in-plot message
+  and does not collapse the y axis.
+- **Hover** gives count, rate per 100k and rank; `<title>` on every bar keeps the same data
+  available without a pointer.
+- Aggregation lives in `GraphView/graphData.js`, DOM-free, so `scripts/test-graphview.mjs`
+  tests the exact numbers the chart draws.
 
 ---
 
@@ -426,6 +446,7 @@ theme tokens used by the other views.
 | 2026-10-31 | Interactions, keyboard, empty states |
 | 2026-11-01 | Data verification + load-time check |
 | 2026-11-03 | GraphView pickup |
+| 2026-10-29 | GraphView implemented ahead of schedule: bar chart, measure/order toggles, deep links, 30 data checks |
 
 ---
 
@@ -437,7 +458,8 @@ theme tokens used by the other views.
 3. **Shared loader.** Shell page vs module singleton (§4.4).
 4. **Colour toggle.** Out of scope today. The theme object is structured so `mono` can sit
    beside `color` later.
-5. **GraphView sort order.** Alphabetical (matches Figma) or descending frequency.
+5. ~~**GraphView sort order.**~~ Resolved 2026-10-29: alphabetical by full state name, with a
+   "By size" toggle for descending frequency (§6.4).
 
 ---
 
