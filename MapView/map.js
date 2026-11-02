@@ -39,15 +39,24 @@ async function printData() {
    Using the topoJSON client made drawing the map way more reliable and future proof since it is an official d3 repository. 
 */
 
-// Dimensions of the soon-to-be U.S. map featuring states
+// // Dimensions of the soon-to-be U.S. map featuring states
+// var width = 975;
+// var height = 610;
+
+// // To create the SVG object. Will become the map in a bit.
+// var svg = d3.select('#usa_map')
+//     .append('svg')
+//     .attr('width', width)
+//     .attr('height', height);
+
 var width = 975;
 var height = 610;
 
-// To create the SVG object. Will become the map in a bit.
+// // To create the SVG object. Will become the map in a bit. Set viewBox so the SVG can scale responsively via CSS
 var svg = d3.select('#usa_map')
     .append('svg')
-    .attr('width', width)
-    .attr('height', height);
+    .attr('viewBox', [0, 0, width, height]);
+
 
 export let g = svg.append('g');  // This is a collection or grouping of SVG ('path') elements. I will export it to use for map functionality.
 

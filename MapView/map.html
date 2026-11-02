@@ -7,47 +7,128 @@
     <title>Document</title>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    <link rel="stylesheet" href="map.css">
 </head>
 
+
+
 <body>
-    <div class="container">
-        <div class="row">
+
+
+    <div class="side-panel">      <!-- Start of side panel -->
+
+        <h1 class="header">TRENDY BABY NAMES ACROSS TIME</h1>
+
+        <div class="formDiv">
+            <h3>Enter a name, click the '+' button, then click a gender. Use the slider to see the evolution over time.</h3>
+            
+            <!-- This is a form that will allow the user to submit the name they want to analyze. It has a 'text' field and a 'button'
+            field. Pressing 'enter' on their keyboard or clicking the 'button' will trigger an action in my map visualization 
+            (assuming gender is also selected). -->
+            <form class="form">  
+                <input id="nameInput" type="text" placeholder="Enter Name" list="nameHistory">
+                <datalist id="nameHistory">
+
+                </datalist>
+                <button id="submitButton" type="submit">+</button>
+            </form>
+        </div>
+
+
+        <div class="links-to-other-pages">
+            <div class="link-to-gender-view">
+                <a class="link" href="../GenderView/gender.html">Detailed Gender View -></a>
+            </div>
+             <div class="link-to-regional-view">
+                <a class="link" href="../RegionalView/regional.html">Detailed Regional View -></a>
+            </div>
+        </div>
+
+        <div class="info">
+            <div class="info-symbol"></div>
+            <p class="visual-description">A geographic display of baby names over time. Slide the 'Time Slider' to see the distributions over 
+                time. Check the 'Gender Filter' boxes to see how the distribution changes with gender. Only one name can be selected.
+            </p>
+        </div>
+        
+    </div>      <!-- End of side panel -->
+    
+
+
+
+    <div class="map-panel">      <!-- Start of map panel -->
+
+        <div class="gender-selection-info-box">
+            <div class="gender-selection">
+                <h3 class="gender-filter-headline">Gender Filter</h3>
+                <div>
+                    <!-- These two inputs are 'checkboxes', one for the user to select "male", and one for the user to select "female". Their
+                    default values are "unchecked", as we want the users to be forced to choose an initial gender (associated with a name) 
+                    to analyze. There are also labels for obvious reasons. -->
+                    <input type="checkbox" id="maleCheckbox" unchecked>
+                    <label for="maleCheckbox" class="checkbox">Male</label>
+                    <input type="checkbox" id="femaleCheckbox" unchecked>
+                    <label for="femaleCheckbox" class="checkbox">Female</label>
+                </div>
+            </div>
+
+            <div class="peak-frequency">
+                <h3 class="peak-frequency-headline">Peak Map Frequency</h3>
+                <p id="peakFrequency">0</p>
+            </div>
+        </div>
+
+        <div class="map">
             <div id="usa_map"></div>
         </div>
-    </div>
 
-    <!-- This is a form that will allow the user to submit the name they want to analyze. It has a 'text' field and a 'button'
-     field. Pressing 'enter' on their keyboard or clicking the 'button' will trigger an action in my map visualization 
-     (assuming gender is also selected). -->
-    <form>  
-        <input id="nameInput" type="text" placeholder="Enter Name">
-        <button id="submitButton" type="submit">+</button>
-    </form>
+        
+        <div class="time-slide">
+            <!-- This is a time slider. I set the minimum value ('min') to 1910 and the 'max' to 2025, to correspond user actions with 
+            our data set. The default starting value ('value') is 1910, as the user will start here. The 'output' element outputs what
+            year is currently being displayed. This is acheived by setting the 'oninput' property of the 'timeSlider' to the current 
+            value of the 'timeSlider':
+            
+            document.getElementById('output').value = this.value
+
+            The default 'output' is 1910, as that's where we begin. 
+            
+            The user can now freely slide this slider from 1910 to 2025. -->
+            <div class="time-slider-container">
+                <h2 class="time-slider-header">Time Slider</h2>
+                <div class="slider-collection">
+                    <span class="sliderYear">1910</span>
+                    <input type="range" id="timeSlider" min="1910" max="2025" value="1910"
+                        oninput="document.getElementById('output').value = this.value">
+                    <span class="sliderYear">2025</span>
+                </div>
+                <output id="output" for="timeSlider">1910</output>
+            </div>
+
+            <div class="opacity-scale-container">
+                <h2 class="opacity-slider-header">Opacity Scale</h2>
+                <div class="opacity-collection">
+                    <span id="opacity-tick-end-left">0</span>
+                    <div class="gradient-bar"></div>
+                    <span id="opacity-tick-end-right">0</span>
+                </div>
+                <div>
+                    <span id="opacity-tick-quarter-left">0</span>
+                    <span id="opacity-tick-quarter-center">0</span>
+                    <span id="opacity-tick-quarter-right">0</span>
+                </div>
+            </div>
+            
+            
+        </div>
+
+    </div>      <!-- End of map container -->
+
     
-    <!-- This is a time slider. I set the minimum value ('min') to 1910 and the 'max' to 2025, to correspond user actions with 
-     our data set. The default starting value ('value') is 1910, as the user will start here. The 'output' element outputs what
-     year is currently being displayed. This is acheived by setting the 'oninput' property of the 'timeSlider' to the current 
-     value of the 'timeSlider':
-     
-     document.getElementById('output').value = this.value
+    
 
-     The default 'output' is 1910, as that's where we begin. 
-     
-     The user can now freely slide this slider from 1910 to 2025. -->
-    <input type="range" id="timeSlider" min="1910" max="2025" value="1910"
-        oninput="document.getElementById('output').value = this.value">
-    <output id="output" for="timeSlider">1910</output>
-
-    <!-- These two inputs are 'checkboxes', one for the user to select "male", and one for the user to select "female". Their
-     default values are "unchecked", as we want the users to be forced to choose an initial gender (associated with a name) 
-     to analyze. There are also labels for obvious reasons. -->
-    <input type="checkbox" id="maleCheckbox" unchecked>
-    <label for="maleCheckbox">Male</label>
-    <input type="checkbox" id="femaleCheckbox" unchecked>
-    <label for="femaleCheckbox">Female</label>
-
-    <!-- <script src="map.js"></script> -->
-    <!-- <script src="mapInteractions.js"></script> -->
+    
+    
 
     <!-- This is an ES module to allow importing and exporting globals, such as the baby_names.json data. Since 
      mapInteractions.js imports the global JSON data from map.js, we have mapInteractions.js as the 'src'. We import both

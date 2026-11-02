@@ -1,0 +1,231 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap');
+
+
+body {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    background-color: #ffffff;
+    color: #000000;
+}
+
+
+
+/* --------------------------  Side Panel --------------------------------------*/
+
+.side-panel {
+    grid-column: 1;
+    border: 3px solid #000000;
+    grid-template-rows: 200px 525px 400px 100px;
+}
+
+.header {
+    
+    border-bottom: 3px solid #000000;
+    padding-bottom: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+input, button, select {
+    font-family: inherit;
+    font-size: inherit;
+    font-family: 'JetBrains Mono', monospace;
+    background-color: #ffffff;
+    color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+}
+
+.formDiv {
+    border-bottom: 3px solid #000000;
+    padding: 20px;
+    padding-bottom: 50px;
+}
+
+.links-to-other-pages {
+    border-bottom: 3px solid #000000;
+    padding: 20px;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+}
+
+.link-to-gender-view {
+    border: 3px solid #000000;
+    padding: 50px;
+    padding-bottom: 50px;
+    margin-bottom: 20px;
+    box-shadow: 6px 6px 0px #000000;
+}
+
+.link-to-regional-view {
+    border: 3px solid #000000;
+    padding: 50px;
+    padding-top: 50px;
+    margin-top: 20px;
+    box-shadow: 6px 6px 0px #000000;
+}
+
+.link {
+    text-decoration: none; 
+    color: inherit;        
+}
+
+.info {
+    border: 3px solid #000000;
+    padding: 20px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.info-symbol::before {
+    content: "\24D8";
+    font-size: 2em;
+    padding-left: 20px;
+    display: inline-block;
+    margin-top: 12px; 
+}
+
+
+.visual-description {
+    font-family: 'JetBrains Mono', monospace;
+    background-color: inherit;
+    color: #000000;
+    padding: 15px;
+}
+
+
+
+/* --------------------------  Map Panel --------------------------------------*/
+
+
+
+.map-panel {
+    grid-column: 2;
+    display: grid;
+    grid-template-rows: 1fr 3fr 1fr; 
+    height: 100vh;
+    box-sizing: border-box;
+    overflow: hidden; 
+}
+
+.gender-selection-info-box {
+    border: 3px solid #000000;
+    padding: 5px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-row: 1;
+}
+
+.gender-selection {
+    border: 3px solid #000000;
+    display: grid;
+    place-items: center;
+    margin-right: 3px
+}
+
+.gender-filter-headline {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 10px;
+}
+
+input[type="checkbox"] {
+    appearance: checkbox;
+    -webkit-appearance: checkbox;
+    accent-color: #000000;
+}
+
+.peak-frequency {
+    border: 3px solid #000000;
+    display: grid;
+    place-items: center;
+}
+
+.peak-frequency-headline {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 10px;
+}
+
+
+.map, 
+#usa_map {
+    width: 100%;
+    height: 100%;
+    min-height: 0; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-top: 50px;
+}
+
+
+#usa_map svg {
+    width: 100%;
+    height: 100%;
+    max-height: 60vh; 
+    display: block;
+    object-fit: contain;
+}
+
+.time-slide {
+    grid-row: 3;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-content: center;
+    place-items: center;
+    padding: 16px 20px;
+    gap: 10px;
+}
+
+.time-slider-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#timeSlider {
+    width: 350px;
+    accent-color: #000000; 
+    cursor: pointer;
+}
+
+
+.opacity-scale-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.opacity-collection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+#opacity-tick-quarter-left,
+#opacity-tick-quarter-center,
+#opacity-tick-quarter-right {
+    text-align: center;
+    width: 50px;
+    margin: 39px;
+}
+
+
+.gradient-bar {
+    flex: 1;
+    height: 16px;
+    width: 350px;
+    border: 1.5px solid #000000;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1.0));
+    margin-bottom: 10px;
+}

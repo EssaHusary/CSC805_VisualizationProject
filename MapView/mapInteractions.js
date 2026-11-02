@@ -1,6 +1,9 @@
 import {babyDataIndex, g} from './map.js';  // Import the baby names JSON data and 'g' (the SVG collection of 'paths') from map.js
 
 
+let searchHistory = [];   // A global to store the user's search history.
+
+
 /* This is a collection of U.S. state FIPS codes associated with a baby name frequency. It will be transformed into a map. I have initialized all values
    in the second index of each inner array to be a value of 0, as I will be updating them in the function called "getDataFromMapInteractions" (found 
    below this collection). The reason I did not create a Map right away is because in my function below this collection, I need to iterate over the JSON
@@ -130,7 +133,7 @@ async function colorOpacity(stateMapPromise, sumPromise){
     .attr('fill', (d) => {
         if (stateMap.get(d.id)){    /* If the state has data for the name the user inputs, let that state be colored red, for now at least, as we'll change 
                                        its opacity in the next couple lines*/
-            return 'red'
+            return 'black'
         
         } else {                   /* Otherwise, if there is no data for that name for that state, let it have the default color of white that we set when we 
                                       originally drew the map */
@@ -156,7 +159,51 @@ async function colorOpacity(stateMapPromise, sumPromise){
 }
 
 
+/* This function updates the search history HTML "datalist" element with the new array. This is necessary as HTML does not update the datalist by
+   default when the indices of the array change. Will be called in the function directly below this one. */
+function updateSearchHistory(){
+    d3.select("#nameHistory")
+    .selectAll("option")
+    .data(searchHistory, d => d)
+    .join("option")          // <-- D3 creates the <option> elements here
+    .attr("value", d => d);
+}
 
+
+
+/* This function adds a name to the search history array. It checks if we have more than 10 names, and if we do, we pop the last name to make
+   room for the newer name.*/
+function addToSearchHistory(name){
+    
+    // If the name is already present, don't do anything. Or, if the array is empty, add a (initial) name.
+    if(!searchHistory.includes(name) || searchHistory.length === 0){
+        
+        searchHistory.unshift(name);     // This adds a name to the beginning of the array
+        
+        if(searchHistory.length > 10){   // If we exceed 10 names, remove the last one in the array
+            searchHistory.pop();
+        }
+        updateSearchHistory();
+    }
+}
+
+
+// This function appends the peak frequency of the selected name to the HTML element with id "peakFrequency"
+async function peakFrequency(sumPromise){
+    let sum = await sumPromise;
+    d3.select("#peakFrequency").text(sum);
+}
+
+
+// This function updates the opacity scale HTML <span> elements with the appropriate frequencies per quarter of the opacity scale.
+async function opacityScale(sumPromise){
+    let sum = await sumPromise;
+    d3.select("#opacity-tick-end-left").text(0);
+    d3.select("#opacity-tick-end-right").text(sum);
+    d3.select("#opacity-tick-quarter-left").text(sum * 0.25);
+    d3.select("#opacity-tick-quarter-center").text(sum * 0.5);
+    d3.select("#opacity-tick-quarter-right").text(sum * 0.75);
+}
 
 
 /* When a user clicks the 'submitButton', the name the user wants to analyze will be processed. This name is acquired from the 
@@ -176,11 +223,17 @@ d3.select("#submitButton")
         let newYear = d3.select("#timeSlider").datum();
         let inputtedName = d3.select("#nameInput").datum();
 
+        addToSearchHistory(inputtedName);
+
         /* To call my protoype function (located all the way up top) to get state-to-state data corresponding to the user's 
            selected gender, year, and name (binded in the lines above) */
         let stateMapPromise = getDataFromMapInteractions(male, female, newYear, inputtedName);
 
         let sumPromise = calculateSum(stateMapPromise);    // Calculate the total sum of the frequencies of the provided name
+
+        peakFrequency(sumPromise);    // Updates the peak frequency of that year
+
+        opacityScale(sumPromise);    // Updates the opacity scale HTML elements
 
         colorOpacity(stateMapPromise, sumPromise)          // To color the opacity of each state according to frequency
 
@@ -210,6 +263,10 @@ d3.select("#timeSlider")
 
         let sumPromise = calculateSum(stateMapPromise);    // Calculate the total sum of the frequencies of the provided name
 
+        peakFrequency(sumPromise);    // Updates the peak frequency of that year
+
+        opacityScale(sumPromise);    // Updates the opacity scale HTML elements
+        
         colorOpacity(stateMapPromise, sumPromise)          // To color the opacity of each state according to frequency
 })
 
@@ -239,6 +296,10 @@ d3.select("#maleCheckbox")
         let stateMapPromise = getDataFromMapInteractions(male, female, newYear, inputtedName);
 
         let sumPromise = calculateSum(stateMapPromise);    // Calculate the total sum of the frequencies of the provided name
+
+        peakFrequency(sumPromise);    // Updates the peak frequency of that year
+
+        opacityScale(sumPromise);    // Updates the opacity scale HTML elements
 
         colorOpacity(stateMapPromise, sumPromise)          // To color the opacity of each state according to frequency
 })
@@ -270,6 +331,10 @@ d3.select("#femaleCheckbox")
         let stateMapPromise = getDataFromMapInteractions(male, female, newYear, inputtedName);
 
         let sumPromise = calculateSum(stateMapPromise);    // Calculate the total sum of the frequencies of the provided name
+
+        peakFrequency(sumPromise);    // Updates the peak frequency of that year
+
+        opacityScale(sumPromise);    // Updates the opacity scale HTML elements
 
         colorOpacity(stateMapPromise, sumPromise)          // To color the opacity of each state according to frequency
 })
