@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSC 805 - Graph View</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <style>
+    :root {
+      --ink: #111111;
+      --paper: #ffffff;
+      --bg: #f4f4f2;
+      --muted: #6b6b6b;
+      --ghost: #ececea;
+      --hair: #d6d6d2;
+      --shadow: 4px 4px 0 #111111;
+    }
+    * { box-sizing: border-box; }
+    html, body { background: var(--bg); }
+    body {
+      margin: 0; padding: 26px;
+      color: var(--ink);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+    }
+    .frame {
+      max-width: 1120px; margin: 0 auto;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      box-shadow: 8px 8px 0 var(--ink);
+      padding: 24px 26px 28px;
+    }
+    h1 {
+      font-size: 21px; font-weight: 700; margin: 0 0 6px;
+      text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.15;
+    }
+    .sub { color: var(--muted); font-size: 12.5px; margin: 0 0 20px; max-width: 82ch; line-height: 1.5; }
+    .sub b { color: var(--ink); font-weight: 700; }
+    .hr { border: 0; border-top: 1px solid var(--hair); margin: 18px 0 22px; }
+
+    .blabel {
+      display: inline-block; border: 1px solid var(--ink); background: var(--paper);
+      padding: 2px 8px 3px; margin-bottom: 10px;
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    }
+    .stack { margin-bottom: 26px; }
+
+    /* controls */
+    .controls {
+      display: grid; grid-template-columns: 280px 1fr 150px;
+      gap: 22px; align-items: end; margin-bottom: 16px;
+    }
+    .controls.second { grid-template-columns: 280px 280px 1fr; margin-bottom: 24px; }
+    .field label, .fld-label {
+      display: block; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+      font-weight: 700; color: var(--ink); margin-bottom: 7px;
+    }
+    .field-row { display: flex; gap: 8px; }
+    input[type="text"] {
+      flex: 1 1 auto; min-width: 0; padding: 8px 9px; font-size: 13px;
+      color: var(--ink); background: var(--paper);
+      border: 1px solid var(--ink); border-radius: 0;
+      box-shadow: 2px 2px 0 var(--ink);
+      font-family: inherit;
+    }
+    input[type="text"]:focus { outline: 2px solid var(--ink); outline-offset: 3px; }
+    .plus {
+      flex: 0 0 34px; height: 36px; line-height: 1; font-size: 17px;
+      background: var(--paper); border: 1px solid var(--ink); border-radius: 0;
+      box-shadow: 2px 2px 0 var(--ink); cursor: pointer; color: var(--ink);
+    }
+    .plus:active { transform: translate(2px, 2px); box-shadow: none; }
+
+    .year-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+    .year-read {
+      background: var(--ink); color: var(--paper);
+      font-size: 12px; font-weight: 700; padding: 2px 8px 3px; letter-spacing: 0.06em;
+    }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 22px; background: transparent; cursor: pointer; margin: 0;
+    }
+    input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--ink); }
+    input[type="range"]::-moz-range-track { height: 2px; background: var(--ink); }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 14px; height: 14px; margin-top: -6px;
+      background: var(--paper); border: 2px solid var(--ink);
+      box-shadow: 2px 2px 0 var(--ink); border-radius: 0;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 12px; height: 12px; background: var(--paper);
+      border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); border-radius: 0;
+    }
+    input[type="range"]:focus { outline: 2px solid var(--ink); outline-offset: 4px; }
+
+    .seg { display: flex; gap: 6px; }
+    .seg button, .btn {
+      flex: 1 1 auto; padding: 9px 8px;
+      background: var(--paper); color: var(--ink);
+      border: 1px solid var(--ink); border-radius: 0; box-shadow: 2px 2px 0 var(--ink);
+      font-family: inherit; font-size: 9.5px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+      text-align: center; text-decoration: none; line-height: 1.35;
+    }
+    .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+    .seg button:active, .btn:active { transform: translate(2px, 2px); box-shadow: none; }
+    .seg button:focus-visible, .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+    .nav { display: flex; gap: 8px; justify-content: flex-end; align-self: end; }
+    .nav .btn { flex: 0 0 auto; padding: 9px 12px; }
+
+    /* panels */
+    section.panel {
+      border: 2px solid var(--ink); background: var(--paper);
+      box-shadow: var(--shadow); padding: 14px 16px 12px; margin-bottom: 22px;
+      position: relative;
+    }
+    svg { display: block; width: 100%; height: auto; }
+    svg text { font-family: inherit; }
+
+    #chartBox { position: relative; }
+    @media (max-width: 1000px) {
+      #chartBox { overflow-x: auto; }
+      #bars { min-width: 780px; }
+    }
+
+    .tip {
+      position: absolute; pointer-events: none; z-index: 5;
+      background: var(--paper); color: var(--ink);
+      border: 1px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+      padding: 6px 8px 7px; font-size: 11px; line-height: 1.45; max-width: 220px;
+    }
+    .tip b { display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
+    .tip span { color: var(--muted); }
+
+    #note { font-size: 12px; color: var(--muted); min-height: 17px; margin-top: 10px; line-height: 1.5; }
+    #note b { color: var(--ink); font-weight: 700; }
+
+    /* fact strip */
+    .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .fact {
+      border: 2px solid var(--ink); background: var(--paper);
+      box-shadow: var(--shadow); padding: 10px 12px 11px;
+    }
+    .fact .k { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+    .fact .v { font-size: 21px; font-weight: 700; letter-spacing: -0.02em; margin: 6px 0 0; line-height: 1.05; }
+    .fact .s { font-size: 10.5px; color: var(--muted); margin-top: 5px; line-height: 1.4; }
+
+    .foot { font-size: 10.5px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+    /* loading */
+    #loading {
+      position: fixed; inset: 0; background: var(--bg); z-index: 20;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; color: var(--ink);
+    }
+    #loading .bar { width: 260px; height: 8px; border: 2px solid var(--ink); background: var(--paper); }
+    #loading .bar > i { display: block; height: 100%; width: 0%; background: var(--ink); transition: width .15s linear; }
+    #loadmsg { color: var(--muted); letter-spacing: 0.06em; }
+
+    @media (max-width: 900px) {
+      .controls, .controls.second { grid-template-columns: 1fr; }
+      .nav { justify-content: flex-start; }
+      .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading"><div>Loading baby_names.json (87 MB)</div><div class="bar"><i></i></div><div id="loadmsg"></div></div>
+
+  <div class="frame">
+    <h1>State-by-State Counts (1910&ndash;2025)</h1>
+    <p class="sub">
+      One bar per state and DC, ordered alphabetically by state name. Bar height is the number of
+      babies of the selected sex given this name in the selected year. The <b>black bar</b> is the
+      state selected on the map; every other bar is gray. Hover a bar for its count, its rate per
+      100,000 births, and its rank; click a bar to pin that state.
+    </p>
+
+    <div class="controls">
+      <div class="field">
+        <label for="nameInput">Name</label>
+        <div class="field-row">
+          <input id="nameInput" type="text" list="nameList" value="Mary" autocomplete="off" spellcheck="false" />
+          <button class="plus" type="button" aria-label="Pick a name" id="pickName">+</button>
+        </div>
+        <datalist id="nameList"></datalist>
+      </div>
+      <div class="field">
+        <label for="yearSlider">Year</label>
+        <div class="year-row"><span class="year-read" id="yearRead">1991</span></div>
+        <input id="yearSlider" type="range" min="1910" max="2025" step="1" value="1991" />
+      </div>
+      <div class="field">
+        <span class="fld-label">Sex</span>
+        <div class="seg" role="group" aria-label="Sex">
+          <button type="button" data-sex="F" aria-pressed="true">Female</button>
+          <button type="button" data-sex="M" aria-pressed="false">Male</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls second">
+      <div class="field">
+        <span class="fld-label">Measure</span>
+        <div class="seg" role="group" aria-label="Measure" id="measure">
+          <button type="button" data-measure="count" aria-pressed="true">Births</button>
+          <button type="button" data-measure="rate" aria-pressed="false">Per 100k</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="fld-label">Order</span>
+        <div class="seg" role="group" aria-label="Order" id="order">
+          <button type="button" data-order="alpha" aria-pressed="true">A&ndash;Z</button>
+          <button type="button" data-order="value" aria-pressed="false">By size</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="fld-label">&nbsp;</span>
+        <div class="nav">
+          <a class="btn" id="backRegional" href="../RegionalView/regional.html">&#8592; Regional</a>
+          <a class="btn" id="backMap" href="../MapView/map.html">Map view</a>
+        </div>
+      </div>
+    </div>
+
+    <hr class="hr" />
+
+    <div class="stack">
+      <span class="blabel">Every State, Ranked by Frequency</span>
+      <section class="panel">
+        <div id="chartBox">
+          <svg id="bars" viewBox="0 0 960 432" role="img"></svg>
+          <div id="tip" class="tip" hidden></div>
+        </div>
+        <div id="note"></div>
+      </section>
+    </div>
+
+    <div class="facts" id="facts"></div>
+
+    <p class="foot">
+      Source: U.S. Social Security Administration baby-name data, 1910&ndash;2025, aggregated to the
+      state level. Counts are births of the selected sex; missing name means zero births, which is
+      drawn as an empty slot rather than a gap in the axis.
+    </p>
+  </div>
+
+  <script type="module" src="graph.js"></script>
+</body>
+</html>
