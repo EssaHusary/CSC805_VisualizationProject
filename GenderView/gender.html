@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gender View</title>
+  <link rel="stylesheet" href="gender.css">
+</head>
+<body>
+  <div class="page">
+    <h1>NAME GENDER SHIFTS FROM 1910-2025</h1>
+
+    <!-- name search and navigation buttons -->
+    <div class="controls">
+      <input id="nameInput" placeholder="Add a name...">
+      <button id="addBtn">+</button>
+      <button id="mapBtn">RETURN TO GENERAL MAP VIEW</button>
+      <button id="regionalBtn">SEE REGIONAL VIEW</button>
+    </div>
+
+    <!-- chart area, d3 draws everything inside this svg -->
+    <div class="box">
+      <svg id="chart" width="860" height="400"></svg>
+    </div>
+
+    <!-- play button, year readout, and slider -->
+    <div class="box slider-box">
+      <button id="playBtn">▶</button>
+      <div class="year-row">
+        <span>1910</span>
+        <div id="yearLabel">1910</div>
+        <span>2025</span>
+      </div>
+      <input id="yearSlider" type="range" min="1910" max="2025" value="1910">
+    </div>
+  </div>
+
+  <!-- hover info box, hidden until the bubble is hovered -->
+  <div id="tooltip"></div>
+
+  <!-- d3 must load before gender.js, since gender.js uses it -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="gender.js"></script>
+</body>
+</html>
