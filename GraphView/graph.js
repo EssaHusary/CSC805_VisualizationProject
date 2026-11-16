@@ -370,13 +370,10 @@ function navHref(base, extra) {
   return base + "?" + q.toString();
 }
 
+// This view is reached from RegionalView only, so its one exit goes back there.
 function syncNav() {
   const back = document.getElementById("backRegional");
-  const gender = document.getElementById("backGender");
-  const map = document.getElementById("backMap");
   if (back) back.href = navHref("../RegionalView/regional.html");
-  if (gender) gender.href = navHref("../GenderView/gender.html");
-  if (map) map.href = navHref("../MapView/map.html");
 }
 
 /* --------------------------- controls ----------------------------- */

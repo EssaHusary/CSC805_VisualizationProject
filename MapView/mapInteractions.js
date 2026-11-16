@@ -389,28 +389,21 @@ function handoffSex(c) {
     return "F";
 }
 
-function viewUrl(base, withState) {
+function viewUrl(base) {
     const c = readControls();
     const q = new URLSearchParams();
     if (c.name) q.set("name", c.name);
     q.set("year", c.year);
     q.set("sex", handoffSex(c));
-    if (withState && selectedState) q.set("state", selectedState);
     return base + "?" + q.toString();
 }
 
+// GraphView is a detail view off RegionalView, so the map does not link to it.
 function refreshNav() {
     const gender = document.getElementById("genderLink");
     const regional = document.getElementById("regionalLink");
-    const graph = document.getElementById("graphLink");
-    if (gender) gender.href = viewUrl("../GenderView/gender.html", false);
-    if (regional) regional.href = viewUrl("../RegionalView/regional.html", false);
-    if (graph) {
-        graph.href = viewUrl("../GraphView/graph.html", true);
-        graph.textContent = selectedState
-            ? "Detailed Graph View: " + selectedState + " ->"
-            : "Detailed Graph View ->";
-    }
+    if (gender) gender.href = viewUrl("../GenderView/gender.html");
+    if (regional) regional.href = viewUrl("../RegionalView/regional.html");
 }
 
 function highlightState() {

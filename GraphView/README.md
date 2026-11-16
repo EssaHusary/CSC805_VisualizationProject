@@ -41,14 +41,16 @@ file:// will not work (ES modules + fetch). Node 22 and Python 3 are all that is
 
 ## Deep links and the shared selection
 
-The URL carries the selection, so any view can hand off to this one:
+This view is a detail view off RegionalView: that is the only view that links to it, and
+"Back to regional view" is its only exit. The URL still carries the selection, so a direct
+link works on its own:
 
     graph.html?name=Mary&year=1991&sex=F&state=CA&measure=rate&order=value
 
 Defaults are Mary / 1991 / F, alphabetical, count measure. measure and order are omitted from
 the URL when they are at their defaults. state accepts CA or California.
 
-Other views (or a future shell) can drive it without reloading:
+A shell or test harness can drive it without reloading:
 
     window.GraphView.setSelection({ name: "Ashley", year: 1991, sex: "F", state: null });
     window.GraphView.getSelection();

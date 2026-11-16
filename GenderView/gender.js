@@ -284,9 +284,7 @@ d3.select("#mapBtn").on("click", () => {
 d3.select("#regionalBtn").on("click", () => {
   window.location.href = navUrl("../RegionalView/regional.html");
 });
-d3.select("#graphBtn").on("click", () => {
-  window.location.href = navUrl("../GraphView/graph.html");
-});
+// No GraphView button here: the graph is a detail view off RegionalView.
 
 /* ---------- hover info box ---------- */
 

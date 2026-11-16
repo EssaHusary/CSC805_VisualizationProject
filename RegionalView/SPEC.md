@@ -213,6 +213,8 @@ Choropleth of the 50 states + DC for the selected name and year.
   opacity/peak scale key showing the max count.
 - Interaction: hover highlights and shows a tooltip (name, state, count); click selects a
   state for GraphView.
+  - **As built (2026-11-15):** no hover tooltip; click outlines the state for visual focus only,
+    because GraphView is no longer reachable from the map.
 - Single-name constraint: the search control holds exactly one name at a time (clearable `×`).
 - Known defects to fix first: duplicate `.on("click")` registration (the second overwrites
   the first) and `printData` re-fetching the 87 MB file on every click.
@@ -238,7 +240,8 @@ Bar chart of state-level frequency for the selected name.
 
 - X: 51 states, sorted by count or alphabetically (decide; alphabetical matches the Figma).
 - Y: frequency; boxed axis label; dashed gridlines.
-- Controls: "Back to regional view".
+- Controls: "Back to regional view" — the only exit (as built 2026-11-15; the earlier
+  Gender/Map links here were removed so the graph stays a detail view of RegionalView).
 - Bars are 1 px black on white with a gray fill; the selected state (from MapView) is
   inverted (black fill).
 - Must handle a name with zero occurrences in most states without collapsing the axis.
@@ -376,23 +379,26 @@ Selection is emitted as `viz:selection` on every change.
   `?name=Mary&year=1991&sex=F`.
 - Unknown or malformed parameters fall back to defaults (`Mary / 1991 / F`).
 
-#### As built (2026-11-15)
+#### As built (2026-11-15, revised same day)
 
-Every view now links to the other three, and all four read `?name&year&sex`:
+GraphView is a **detail view of RegionalView**, not a sibling. It is reachable from RegionalView
+only, and its single exit is back to RegionalView. MapView and GenderView do not link to it.
 
 | View | Outgoing links | Reads URL on load |
 | --- | --- | --- |
-| MapView | Gender, Regional, Graph (Graph also carries `state`) | yes |
-| RegionalView | Map, Gender, Graph | yes |
-| GenderView | Map, Regional, Graph | yes |
-| GraphView | Regional, Gender, Map | yes |
+| MapView | Gender, Regional | yes |
+| RegionalView | Map, Gender, **Graph** | yes |
+| GenderView | Map, Regional | yes |
+| GraphView | Regional only | yes |
 
 - RegionalView's nav row sits under the controls; its four region cards are also clickable
-  (and keyboard-reachable) and open the graph view, which is the replacement for the
-  wireframe's "click a bubble" affordance.
-- MapView passes the state clicked on the map through to GraphView as `state`, so a state
-  picked on the choropleth arrives already inked in the bar chart. Clicking also re-labels the
-  link ("Detailed Graph View: TX ->").
+  (and keyboard-reachable) and open the graph, which is the replacement for the wireframe's
+  "click a bubble" affordance. That is also why the graph is one click from a region rather than
+  a peer of the map.
+- Clicking a state on the choropleth still outlines it, but it no longer hands anything to the
+  graph: with no inbound link from MapView there is no route to carry `state` along.
+  GraphView still *accepts* `?state=XX` (direct link, and its own click-to-pin), and MapView
+  still reads `?state` for its own highlight, so neither parameter is dead code.
 - MapView and GenderView previously ignored the query string, so a link into them landed on
   their defaults; both now apply name, year and sex on load.
 - Helpers are local to each view (no shared module) to keep the folders self-contained, as §4.2
