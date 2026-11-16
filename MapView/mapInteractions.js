@@ -338,3 +338,171 @@ d3.select("#femaleCheckbox")
 
         colorOpacity(stateMapPromise, sumPromise)          // To color the opacity of each state according to frequency
 })
+
+
+/* =============================================================================
+   Cross-view navigation (URL state)
+   -----------------------------------------------------------------------------
+   Every view carries the selection as ?name&year&sex[&state], so a handoff
+   never loses the name the user was just looking at. This block also READS
+   those parameters on load, which is what makes the buttons in the other three
+   views land on a working map instead of an empty one.
+
+   Nothing above this line changes: the prototype pipeline (datums, form,
+   checkboxes, slider) stays exactly as written. This block only re-runs that
+   pipeline from the URL, and re-stamps the three handoff links whenever a
+   control changes.
+   ========================================================================== */
+
+let selectedState = null;      // postal code of the state clicked on the map, or null
+let fipsMap = new Map();       // FIPS -> postal code, built once the data is in
+
+function postalOf(fips) {
+    return fipsMap.get(String(fips)) || null;
+}
+
+// FIPS -> postal. stateFIPSArray is index-aligned with the JSON's alphabetical
+// postal keys (see the comment at the top of this file), so the mapping is positional.
+async function buildFipsMap() {
+    if (fipsMap.size) return fipsMap;
+    const data = await babyDataIndex;
+    const keys = Object.keys(data);
+    stateFIPSArray.forEach((entry, i) => {
+        if (keys[i]) fipsMap.set(String(entry[0]), keys[i]);
+    });
+    return fipsMap;
+}
+
+function readControls() {
+    return {
+        name: d3.select("#nameInput").property("value").trim(),
+        year: d3.select("#timeSlider").property("value"),
+        male: d3.select("#maleCheckbox").property("checked"),
+        female: d3.select("#femaleCheckbox").property("checked")
+    };
+}
+
+// GraphView plots one sex at a time. Both boxes (or neither) fall back to female.
+function handoffSex(c) {
+    if (c.female && !c.male) return "F";
+    if (c.male && !c.female) return "M";
+    return "F";
+}
+
+function viewUrl(base, withState) {
+    const c = readControls();
+    const q = new URLSearchParams();
+    if (c.name) q.set("name", c.name);
+    q.set("year", c.year);
+    q.set("sex", handoffSex(c));
+    if (withState && selectedState) q.set("state", selectedState);
+    return base + "?" + q.toString();
+}
+
+function refreshNav() {
+    const gender = document.getElementById("genderLink");
+    const regional = document.getElementById("regionalLink");
+    const graph = document.getElementById("graphLink");
+    if (gender) gender.href = viewUrl("../GenderView/gender.html", false);
+    if (regional) regional.href = viewUrl("../RegionalView/regional.html", false);
+    if (graph) {
+        graph.href = viewUrl("../GraphView/graph.html", true);
+        graph.textContent = selectedState
+            ? "Detailed Graph View: " + selectedState + " ->"
+            : "Detailed Graph View ->";
+    }
+}
+
+function highlightState() {
+    g.selectAll("path")
+        .attr("stroke-width", (d) => (postalOf(d.id) === selectedState ? 3 : 1))
+        .attr("stroke", "#000000");
+}
+
+function wireStateClicks() {
+    const host = document.querySelector("#usa_map svg");
+    if (!host) return;
+    // Delegated on the svg so map.js keeps its own path handlers untouched.
+    host.addEventListener("click", (event) => {
+        const path = event.target.closest ? event.target.closest("path") : null;
+        if (!path || !path.__data__) return;
+        const fips = String(path.__data__.id);
+        if (Number(fips) >= 60) return;          // skip territories
+        const postal = postalOf(fips);
+        if (!postal) return;
+        selectedState = selectedState === postal ? null : postal;
+        highlightState();
+        refreshNav();
+    });
+}
+
+// Re-run the prototype pipeline from the current controls (no datums to rely on).
+function renderCurrent() {
+    const c = readControls();
+    if (!c.name) return;
+    const stateMapPromise = getDataFromMapInteractions(c.male, c.female, c.year, c.name);
+    const sumPromise = calculateSum(stateMapPromise);
+    peakFrequency(sumPromise);
+    opacityScale(sumPromise);
+    colorOpacity(stateMapPromise, sumPromise);
+}
+
+// The map paths arrive from a CDN, so wait for them before styling or binding.
+function whenMapReady(fn, tries) {
+    tries = tries || 0;
+    if (g.selectAll("path").size() > 0) { fn(); return; }
+    if (tries > 120) return;
+    setTimeout(() => whenMapReady(fn, tries + 1), 100);
+}
+
+// Apply ?name&year&sex to the form. Returns true when a name was applied.
+function applyUrlSelection() {
+    const q = new URLSearchParams(location.search);
+    const name = q.get("name");
+    const year = Number(q.get("year"));
+    const sex = (q.get("sex") || "").toUpperCase();
+    let applied = false;
+
+    if (name && name.trim()) {
+        const typed = name.trim();
+        const pretty = typed.charAt(0).toUpperCase() + typed.slice(1).toLowerCase();
+        d3.select("#nameInput").property("value", pretty).datum(pretty);
+        addToSearchHistory(pretty);
+        applied = true;
+    }
+
+    if (year >= 1910 && year <= 2025) {
+        d3.select("#timeSlider").property("value", year).datum(String(year));
+        document.getElementById("output").value = year;
+    }
+
+    if (sex === "F" || sex === "M") {
+        const male = sex === "M";
+        d3.select("#maleCheckbox").property("checked", male).datum(male);
+        d3.select("#femaleCheckbox").property("checked", !male).datum(!male);
+    }
+
+    return applied;
+}
+
+// Stamp the links immediately, then finish once the map exists.
+refreshNav();
+document.addEventListener("input", refreshNav);
+document.addEventListener("change", refreshNav);
+document.addEventListener("click", refreshNav);
+
+whenMapReady(async () => {
+    try {
+        await buildFipsMap();
+        const q = new URLSearchParams(location.search);
+        const state = (q.get("state") || "").toUpperCase();
+        if (/^[A-Z]{2}$/.test(state) && fipsMap.size) selectedState = state;
+
+        if (applyUrlSelection()) renderCurrent();   // this is the deep-link render
+        highlightState();
+        refreshNav();
+        wireStateClicks();
+    } catch (err) {
+        console.warn("[MapView] could not apply the URL selection:", err);
+    }
+});

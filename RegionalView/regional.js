@@ -278,6 +278,15 @@ function renderCards(m) {
     const bar = c.append("div").attr("class", "bar");
     bar.append("i").style("background", REGION_COLORS[region])
       .style("width", Math.max(1, m.weights[region] * 100) + "%");
+
+    // Clickable, keyboard-reachable entry point into the state-level graph.
+    c.attr("role", "link").attr("tabindex", 0)
+      .attr("title", "Open the graph view for " + m.name + " (" + sel.year + ")")
+      .on("click", goGraph)
+      .on("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); goGraph(); }
+      });
+    c.append("div").attr("class", "open").text("Open graph \u2192");
   });
 }
 
@@ -440,7 +449,56 @@ function update() {
       " - the " + top.r + " accounts for " + (m.share[top.r] * 100).toFixed(0) + "% of them.");
   }
 
+  writeQuery();
+  syncNav();
+
   window.dispatchEvent(new CustomEvent("viz:selection", { detail: { ...sel } }));
+}
+
+/* ----------------------- url + navigation -------------------------- */
+
+/** Read name/year/sex from the query string, so links between views keep the selection. */
+function readQuery() {
+  const q = new URLSearchParams(location.search);
+  const name = q.get("name");
+  if (name && name.trim()) sel.name = titleCase(name);
+  const year = Number(q.get("year"));
+  if (year >= YEAR_MIN && year <= YEAR_MAX) sel.year = Math.round(year);
+  const sex = (q.get("sex") || "").toUpperCase();
+  if (sex === "F" || sex === "M") sel.sex = sex;
+}
+
+/** Keep the address bar in sync, so this view is deep-linkable like GraphView. */
+function writeQuery() {
+  const q = new URLSearchParams();
+  q.set("name", sel.name);
+  q.set("year", String(sel.year));
+  q.set("sex", sel.sex);
+  history.replaceState(null, "", location.pathname + "?" + q.toString());
+}
+
+/** A link to another view that carries the current selection. */
+function viewHref(base, extraKey, extraValue) {
+  const q = new URLSearchParams();
+  q.set("name", sel.name);
+  q.set("year", String(sel.year));
+  q.set("sex", sel.sex);
+  if (extraKey && extraValue) q.set(extraKey, extraValue);
+  return base + "?" + q.toString();
+}
+
+function syncNav() {
+  const map = document.getElementById("navMap");
+  const gender = document.getElementById("navGender");
+  const graph = document.getElementById("navGraph");
+  if (map) map.href = viewHref("../MapView/map.html");
+  if (gender) gender.href = viewHref("../GenderView/gender.html");
+  if (graph) graph.href = viewHref("../GraphView/graph.html");
+}
+
+/** A region card is this view's equivalent of the wireframe's bubble. */
+function goGraph() {
+  window.location.href = viewHref("../GraphView/graph.html");
 }
 
 /* --------------------------- controls ----------------------------- */
@@ -471,6 +529,19 @@ function fillNameList() {
   }
 }
 
+/** Push sel back into the DOM. Needed after readQuery(), which runs before wiring. */
+function syncControls() {
+  const input = document.getElementById("nameInput");
+  if (input) input.value = sel.name;
+  const slider = document.getElementById("yearSlider");
+  if (slider) slider.value = sel.year;
+  const read = document.getElementById("yearRead");
+  if (read) read.textContent = sel.year;
+  for (const b of document.querySelectorAll(".sex button")) {
+    b.setAttribute("aria-pressed", String(b.dataset.sex === sel.sex));
+  }
+}
+
 function wireControls() {
   const input = document.getElementById("nameInput");
   input.value = sel.name;
@@ -495,6 +566,7 @@ function wireControls() {
 /* ----------------------------- boot ------------------------------- */
 
 (async function boot() {
+  readQuery();
   try {
     await loadData();
   } catch (err) {
@@ -503,6 +575,7 @@ function wireControls() {
   }
   fillNameList();
   wireControls();
+  syncControls();
   update();
   // Warm the totals cache for the current sex so the trend chart is instant next time.
   setTimeout(() => { for (let y = YEAR_MIN; y <= YEAR_MAX; y++) getTotals(sel.sex, y); }, 400);

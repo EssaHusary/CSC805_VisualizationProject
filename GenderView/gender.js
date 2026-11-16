@@ -25,6 +25,7 @@ const x = d3.scaleLinear().domain([0, 1]).range([120, 740]);
 let data = null;             
 let currentName = "Leslie";  // null means no name is selected
 let currentYear = 1910;
+let urlSex = "F";            // the sex this page was opened with, kept for handoffs
 
 
 /* ---------- background ---------- */
@@ -257,12 +258,34 @@ d3.select("#playBtn").on("click", () => {
 });
 
 /* ---------- navigation buttons ---------- */
+// Every handoff carries the current name, year and sex, so the next view opens
+// on the same selection instead of its defaults.
+
+// the bubble shows both sexes; views that need one get the dominant one
+function currentSex() {
+  if (!data || !currentName) return urlSex;
+  const { f, m } = getCounts(currentName, currentYear);
+  if (f === 0 && m === 0) return urlSex;
+  return f >= m ? "F" : "M";
+}
+
 // ../ means go up one folder, then into the other view's folder
+function navUrl(base) {
+  const q = new URLSearchParams();
+  if (currentName) q.set("name", currentName);
+  q.set("year", String(currentYear));
+  q.set("sex", currentSex());
+  return base + "?" + q.toString();
+}
+
 d3.select("#mapBtn").on("click", () => {
-  window.location.href = "../MapView/map.html";  
+  window.location.href = navUrl("../MapView/map.html");
 });
 d3.select("#regionalBtn").on("click", () => {
-  window.location.href = "../RegionalView/regional.html";
+  window.location.href = navUrl("../RegionalView/regional.html");
+});
+d3.select("#graphBtn").on("click", () => {
+  window.location.href = navUrl("../GraphView/graph.html");
 });
 
 /* ---------- hover info box ---------- */
@@ -329,5 +352,19 @@ bubble.select(".main")
 d3.json("national_baby_names.json").then(json => {
   data = json;
   console.log("Data loaded!");
+
+  // Deep link from another view: ?name=Mary&year=1991&sex=F
+  const q = new URLSearchParams(location.search);
+  const name = q.get("name");
+  const year = Number(q.get("year"));
+  const sex = (q.get("sex") || "").toUpperCase();
+  if (sex === "F" || sex === "M") urlSex = sex;
+  if (year >= 1910 && year <= 2025) currentYear = Math.round(year);
+  if (name && name.trim()) {
+    const typed = name.trim();
+    currentName = typed.charAt(0).toUpperCase() + typed.slice(1).toLowerCase();
+    d3.select("#nameInput").property("value", currentName);
+  }
+
   update();
 });

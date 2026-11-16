@@ -376,6 +376,28 @@ Selection is emitted as `viz:selection` on every change.
   `?name=Mary&year=1991&sex=F`.
 - Unknown or malformed parameters fall back to defaults (`Mary / 1991 / F`).
 
+#### As built (2026-11-15)
+
+Every view now links to the other three, and all four read `?name&year&sex`:
+
+| View | Outgoing links | Reads URL on load |
+| --- | --- | --- |
+| MapView | Gender, Regional, Graph (Graph also carries `state`) | yes |
+| RegionalView | Map, Gender, Graph | yes |
+| GenderView | Map, Regional, Graph | yes |
+| GraphView | Regional, Gender, Map | yes |
+
+- RegionalView's nav row sits under the controls; its four region cards are also clickable
+  (and keyboard-reachable) and open the graph view, which is the replacement for the
+  wireframe's "click a bubble" affordance.
+- MapView passes the state clicked on the map through to GraphView as `state`, so a state
+  picked on the choropleth arrives already inked in the bar chart. Clicking also re-labels the
+  link ("Detailed Graph View: TX ->").
+- MapView and GenderView previously ignored the query string, so a link into them landed on
+  their defaults; both now apply name, year and sex on load.
+- Helpers are local to each view (no shared module) to keep the folders self-contained, as §4.2
+  requires. The duplicated `viewUrl`/`viewHref` is deliberate.
+
 ---
 
 ## 9. Performance budget
